@@ -1,0 +1,4 @@
+marimo>=0.1.0
+pymmcore-plus>=0.13.7
+numpy>=1.21.0
+plotly>=5.13.0 
