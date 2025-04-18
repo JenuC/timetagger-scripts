@@ -1,3 +1,12 @@
 swabianinstruments-web-demo
 .venv
 workspace_for_TT_PMTcounting
+.DS_Store   
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+
