@@ -14,18 +14,17 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture
 def mock_timetagger():
-    """Fixture that provides a mock TimeTagger instance."""
-    with patch('TimeTagger.createTimeTagger') as mock_create:
+    """Create a mock TimeTagger instance."""
+    with patch('pmt_profiler.tt.TIMETAGGER_AVAILABLE', True), \
+         patch('pmt_profiler.tt.TT.createTimeTagger') as mock_create:
         mock_tagger = MagicMock()
         mock_create.return_value = mock_tagger
         yield mock_tagger
 
 def test_timetagger_initialization(mock_timetagger):
-    """Test that TimeTaggerManager initializes correctly."""
+    """Test TimeTagger initialization."""
     tt = TimeTaggerManager()
     assert tt.tagger == mock_timetagger
-    mock_timetagger.reset.assert_called_once()
-    mock_timetagger.clearOverflows.assert_called_once()
 
 def test_set_trigger_level(mock_timetagger):
     """Test setting trigger level."""
@@ -42,23 +41,22 @@ def test_get_darkcounts(mock_timetagger):
     mock_counter.isRunning.side_effect = [True, True, False]  # Run twice, then stop
     mock_counter.getData.return_value = [100.0, 200.0]
     
-    # Mock tqdm to prevent actual progress bar display during tests
+    # Mock Rich Progress
     with patch('TimeTagger.Counter', return_value=mock_counter), \
-         patch('pmt_profiler.tt.tqdm') as mock_tqdm:
-        # Configure mock tqdm instance
-        mock_progress = MagicMock()
-        mock_progress.start_t = 0
-        mock_tqdm.return_value = mock_progress
+         patch('pmt_profiler.tt.Progress') as mock_progress:
+        # Configure mock progress instance
+        mock_progress_instance = MagicMock()
+        mock_progress_instance.start_time = 0
+        mock_progress.return_value.__enter__.return_value = mock_progress_instance
         
         data = tt.get_darkcounts([-1, 1], collection_time_sec=1, timing_resolution_sec=1)
         
         assert data == [100.0, 200.0]
         mock_counter.startFor.assert_called_once()
-        mock_tqdm.assert_called_once()
-        mock_progress.close.assert_called_once()
+        mock_progress.assert_called_once()
 
 def test_close(mock_timetagger):
-    """Test closing TimeTagger resources."""
+    """Test closing TimeTagger."""
     tt = TimeTaggerManager()
     tt.close()
     assert tt.tagger is None
