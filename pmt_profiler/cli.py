@@ -32,7 +32,7 @@ def get_DCC_DCU_properties(mmc):
     bh_devices = [k for k in device_adapter_names if 'BH' in k]
     
     # Create a table for BH devices
-    bh_table = Table(title="BH Devices Available", show_header=True, header_style="bold magenta")
+    bh_table = Table(title="BH Devices Supported in dll", show_header=True, header_style="bold magenta")
     bh_table.add_column("Device", style="cyan")
     
     for device in bh_devices:
@@ -57,7 +57,7 @@ def get_DCC_DCU_properties(mmc):
     # Get each property value
     for prop in props:
         try:
-            value = mmc.getProperty(device_name, prop)
+            value = mmc.mmc.getProperty(device_name, prop)
             dcc_table.add_row(prop, str(value))
         except Exception as e:
             dcc_table.add_row(prop, f"Error: {str(e)}")
@@ -81,7 +81,7 @@ def get_DCC_DCU_properties(mmc):
     # Get each property value
     for prop in props:
         try:
-            value = mmc.getProperty(device_name, prop)
+            value = mmc.mmc.getProperty(device_name, prop)
             hub_table.add_row(prop, str(value))
         except Exception as e:
             hub_table.add_row(prop, f"Error: {str(e)}")
@@ -148,12 +148,14 @@ Examples:
         print(f"Error initializing Micro-Manager: {e}")
         print("Falling back to mock Micro-Manager")
         mmc = MockMicroManager()
+        
     
     # Display device information if requested
     if args.info:
         console.print(Panel.fit("Device Information", style="bold blue"))
         get_device_info(mmc)
         get_DCC_DCU_properties(mmc)
+        
         return
     
     # Handle PMT control if requested
