@@ -21,10 +21,10 @@ tt.set_trigger_level(-1, -0.01)  # For start channel
 tt.set_trigger_level(1, -0.01)   # For stop channel
 
 channels=[-1, 1]
-collection_time_sec=5
+collection_time_sec=100
 timing_resolution_sec=1
 
-start_PMT(mmc=mm2.mmc, gain=65)
+start_PMT(mmc=mm2.mmc, gain=65,cooling_time=10)
 # Get dark counts with progress bar
 print(f"\nCollecting dark counts for {collection_time_sec} seconds...")
 data = tt.get_darkcounts(channels,collection_time_sec,timing_resolution_sec)
