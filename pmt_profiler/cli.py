@@ -3,6 +3,8 @@
 import argparse
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
+from rich.text import Text
 from .core import MockMicroManager, MicroManager
 from .pmt import start_PMT, stop_PMT
 
@@ -10,35 +12,82 @@ console = Console()
 
 def get_device_info(mmc):
     """Print information about loaded devices and their properties."""
-    print("Loaded devices:", mmc.getLoadedDevices())
+    # Create a table for devices
+    devices_table = Table(title="Loaded Devices", show_header=True, header_style="bold magenta")
+    devices_table.add_column("Device", style="cyan")
+    devices_table.add_column("Properties", style="green")
+    
+    # Add each device and its properties to the table
     for dev in mmc.getLoadedDevices():
-        print(f"{dev}: {mmc.getDevicePropertyNames(dev)}")
+        props = mmc.getDevicePropertyNames(dev)
+        devices_table.add_row(dev, ", ".join(props))
+    
+    console.print(devices_table)
+    console.print()
 
 def get_DCC_DCU_properties(mmc):
     """Get properties of DCC_DCU module."""
     # Get device adapter names with BH
     device_adapter_names = mmc.getDeviceAdapterNames()
     bh_devices = [k for k in device_adapter_names if 'BH' in k]
-    print("\nBH devices available as dll:", bh_devices)
     
-    # Find properties of BH_DCC_DCU adapter
-    device = mmc.getDeviceObject('DCCHub')
+    # Create a table for BH devices
+    bh_table = Table(title="BH Devices Available", show_header=True, header_style="bold magenta")
+    bh_table.add_column("Device", style="cyan")
     
-    # Create a table for device properties using rich
-    table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("Property", style="cyan")
-    table.add_column("Value", style="green")
+    for device in bh_devices:
+        bh_table.add_row(device)
     
-    for prop in device.properties:
-        table.add_row(prop.name, str(prop.value))
+    console.print(bh_table)
+    console.print()
     
-    console.print(table)
+    # Get properties for DCCModule1
+    device_name = 'DCCModule1'
+    props = mmc.getDevicePropertyNames(device_name)
     
-    # Get the property names of one of BH DCC_DCU module
-    props = mmc.getDevicePropertyNames('DCCModule1')
-    print("\nDCCModule1 Properties:")
+    # Create a table for DCCModule1 properties with values
+    dcc_table = Table(
+        title=f"Properties and Values for {device_name}", 
+        show_header=True, 
+        header_style="bold magenta"
+    )
+    dcc_table.add_column("Property", style="cyan")
+    dcc_table.add_column("Value", style="green")
+    
+    # Get each property value
     for prop in props:
-        print(prop)
+        try:
+            value = mmc.getProperty(device_name, prop)
+            dcc_table.add_row(prop, str(value))
+        except Exception as e:
+            dcc_table.add_row(prop, f"Error: {str(e)}")
+    
+    console.print(dcc_table)
+    console.print()
+    
+    # Get properties for DCCHub
+    device_name = 'DCCHub'
+    props = mmc.getDevicePropertyNames(device_name)
+    
+    # Create a table for DCCHub properties with values
+    hub_table = Table(
+        title=f"Properties and Values for {device_name}", 
+        show_header=True, 
+        header_style="bold magenta"
+    )
+    hub_table.add_column("Property", style="cyan")
+    hub_table.add_column("Value", style="green")
+    
+    # Get each property value
+    for prop in props:
+        try:
+            value = mmc.getProperty(device_name, prop)
+            hub_table.add_row(prop, str(value))
+        except Exception as e:
+            hub_table.add_row(prop, f"Error: {str(e)}")
+    
+    console.print(hub_table)
+    console.print()
 
 def main():
     parser = argparse.ArgumentParser(
@@ -102,6 +151,7 @@ Examples:
     
     # Display device information if requested
     if args.info:
+        console.print(Panel.fit("Device Information", style="bold blue"))
         get_device_info(mmc)
         get_DCC_DCU_properties(mmc)
         return

@@ -52,17 +52,58 @@ def test_cli_stop_pmt_mock(mock_micro_manager):
 @patch('pmt_profiler.core.MicroManager')
 def test_cli_info_mock(mock_micro_manager):
     """Test displaying device information in mock mode."""
-    # Configure the mock to return a MockMicroManager instance
-    mock_micro_manager.return_value = MockMicroManager()
+    # Create a mock MicroManager instance with the necessary methods
+    mock_mm = MagicMock()
+    
+    # Mock getLoadedDevices
+    mock_mm.getLoadedDevices.return_value = ['DCCHub', 'DCCModule1', 'Core']
+    
+    # Mock getDevicePropertyNames
+    mock_mm.getDevicePropertyNames.side_effect = lambda device: {
+        'DCCHub': ['SimulateDevice', 'Simulated', 'UseModule1', 'UseModule2', 'UseModule3'],
+        'DCCModule1': ['EnableOutputs', 'C3_GainHV', 'C3_Plus12V', 'C4_GainHV', 'C4_Plus12V'],
+        'Core': ['AutoFocus', 'AutoShutter', 'Camera', 'ChannelGroup', 'Focus', 'Galvo', 'ImageProcessor']
+    }.get(device, [])
+    
+    # Mock getDeviceAdapterNames
+    mock_mm.getDeviceAdapterNames.return_value = ['BH_DCC', 'BH_DCC_DCU', 'Core', 'DemoCamera', 'DemoXYStage']
+    
+    # Mock getProperty
+    mock_mm.getProperty.side_effect = lambda device, prop: {
+        'DCCHub': {
+            'SimulateDevice': 'No',
+            'Simulated': 'No',
+            'UseModule1': 'Yes',
+            'UseModule2': 'No',
+            'UseModule3': 'No'
+        },
+        'DCCModule1': {
+            'EnableOutputs': 'Off',
+            'C3_GainHV': '0',
+            'C3_Plus12V': 'Off',
+            'C4_GainHV': '0',
+            'C4_Plus12V': 'Off'
+        }
+    }.get(device, {}).get(prop, 'Unknown')
+    
+    # Configure the mock to return our custom mock
+    mock_micro_manager.return_value = mock_mm
     
     with patch('sys.stdout', new=StringIO()) as fake_out:
         with patch('sys.argv', ['pmt_profiler.cli', '--mock', '--info']):
             main()
         output = fake_out.getvalue()
-        assert "Loaded devices:" in output
+        
+        # Check for key elements in the output without being too strict about formatting
+        assert "Device Information" in output
         assert "DCCHub" in output
         assert "DCCModule1" in output
         assert "Core" in output
+        
+        # Check that property values are being retrieved
+        assert "SimulateDevice" in output
+        assert "EnableOutputs" in output
+        assert "C3_GainHV" in output
 
 @patch('pmt_profiler.core.MicroManager')
 def test_cli_invalid_pmt_option(mock_micro_manager):
