@@ -20,6 +20,14 @@ requires-python = ">=3.10"
 dependencies = [
     "pymmcore-plus[cli]",
     "rich",
+    "pandas",
+    "matplotlib",
+    "scikit-image",
+    "tifffile",
+    "seaborn",
+    "tqdm",
+    "openpyxl",
+    "pytest",
 ]
 
 [project.scripts]
