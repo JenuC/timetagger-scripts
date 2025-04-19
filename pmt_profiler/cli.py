@@ -158,8 +158,8 @@ Examples:
         mmc = MockMicroManager() if args.mock else MicroManager()
     except Exception as e:
         # If there's an error initializing the real Micro-Manager, fall back to mock
-        print(f"Error initializing Micro-Manager: {e}")
-        print("Falling back to mock Micro-Manager")
+        console.print(f"[red]Error initializing Micro-Manager: {e}")
+        console.print("[red]Falling back to mock Micro-Manager")
         mmc = MockMicroManager()
     
     # Display device information if requested
