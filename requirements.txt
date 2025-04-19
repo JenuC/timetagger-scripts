@@ -1,0 +1,9 @@
+pymmcore-plus[cli]
+jupyterlab 
+matplotlib
+scikit-image
+tifffile
+pandas
+seaborn
+tqdm
+openpyxl
