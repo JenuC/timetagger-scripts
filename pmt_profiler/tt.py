@@ -74,13 +74,14 @@ class TimeTaggerManager:
         counter.startFor(capture_duration=binwidth * n_values)
         
         # Create progress bar using Rich
+        start_time = time.time()
         with Progress() as progress:
             task = progress.add_task("[cyan]Collecting dark counts...", total=int(collection_time_sec))
             last_update = 0
             
             while counter.isRunning():
                 time.sleep(0.1)  # Check every 100ms
-                current_time = time.time() - progress.start_time
+                current_time = time.time() - start_time
                 if current_time - last_update >= 1:  # Update every second
                     progress.update(task, advance=1)
                     last_update = current_time
