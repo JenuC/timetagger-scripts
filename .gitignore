@@ -9,4 +9,5 @@ __pycache__
 *.pyw
 *.pyz
 *.pywz
-
+*.egg-info/
+.pytest_cache/

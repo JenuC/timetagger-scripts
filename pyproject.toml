@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pmt_profiler"
+version = "0.1.0"
+description = "PMT Profiler Tool using BH-DCC and Swabian-TTU"
+readme = "README.md"
+authors = [
+    {name = "JenuC", email = "jenuvchacko@gmail.com"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "pymmcore-plus[cli]",
+    "rich",
+]
+
+[project.scripts]
+pmt_profiler = "pmt_profiler.cli:main"
+
+[tool.setuptools]
+packages = ["pmt_profiler"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"] 

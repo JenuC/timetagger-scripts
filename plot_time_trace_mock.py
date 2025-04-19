@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import pathlib
-from pymmcore_plus import CMMCorePlus, find_micromanager
 from datetime import datetime
 from rich.console import Console
 from rich.table import Table
@@ -9,12 +8,55 @@ from rich.table import Table
 # Initialize rich console
 console = Console()
 
+class MockCMMCorePlus:
+    def __init__(self):
+        self.devices = {
+            'DCCHub': ['SimulateDevice', 'Simulated', 'UseModule1', 'UseModule2', 'UseModule3'],
+            'DCCModule1': ['EnableOutputs', 'C3_GainHV', 'C3_Plus12V', 'C4_GainHV', 'C4_Plus12V'],
+            'Core': ['AutoFocus', 'AutoShutter', 'Camera', 'ChannelGroup', 'Focus', 'Galvo', 'ImageProcessor']
+        }
+        self.device_properties = {
+            'DCCHub': {
+                'SimulateDevice': 'No',
+                'Simulated': 'No',
+                'UseModule1': 'Yes',
+                'UseModule2': 'No',
+                'UseModule3': 'No'
+            }
+        }
+        self.config_groups = ['ENABLE', 'GAIN CONTROL PERCENT', 'Supply']
+        self.device_adapters = ['BH_DCC', 'BH_DCC_DCU', 'Core', 'DemoCamera', 'DemoXYStage']
+
+    def getLoadedDevices(self):
+        return list(self.devices.keys())
+
+    def getDevicePropertyNames(self, device):
+        return self.devices.get(device, [])
+
+    def getDeviceObject(self, device):
+        class MockDevice:
+            def __init__(self, properties):
+                self.properties = [
+                    type('Property', (), {'name': k, 'value': v})
+                    for k, v in properties.items()
+                ]
+        return MockDevice(self.device_properties.get(device, {}))
+
+    def getAvailableConfigGroups(self):
+        return self.config_groups
+
+    def getDeviceAdapterNames(self):
+        return self.device_adapters
+
+    def setProperty(self, device, prop, value):
+        print(f"Setting {device}.{prop} = {value}")
+
+    def waitForDevice(self, device):
+        pass
+
 def setup_micro_manager():
     """Initialize and configure Micro-Manager."""
-    mmc = CMMCorePlus()
-    mm_path = r'C:/Program Files/Micro-Manager-nightly-markt'
-    mmc.loadSystemConfiguration(f'{mm_path}/DCC_alone.cfg')
-    return mmc
+    return MockCMMCorePlus()
 
 def get_device_info(mmc):
     """Print information about loaded devices and their properties"""
@@ -65,7 +107,6 @@ def stop_PMT(mmc, gain=0, ch='C3'):
     print(f"PMT stopped on channel {ch}")
 
 def main():
-    
     # Initialize Micro-Manager
     mmc = setup_micro_manager()
     
@@ -78,6 +119,11 @@ def main():
     
     # Get DCC DCU properties
     get_DCC_DCU_properties(mmc)
+    
+    # Test PMT functions
+    print("\nTesting PMT functions:")
+    start_PMT(mmc)
+    stop_PMT(mmc)
 
 if __name__ == "__main__":
     main() 
