@@ -25,22 +25,13 @@ def get_device_info(mmc):
     console.print(devices_table)
     console.print()
 
-def get_DCC_DCU_properties(mmc):
-    """Get properties of DCC_DCU module."""
-    # Get device adapter names with BH
-    device_adapter_names = mmc.getDeviceAdapterNames()
-    bh_devices = [k for k in device_adapter_names if 'BH' in k]
+def get_DCC_DCU_properties(mmc, detailed=False):
+    """Get properties of DCC_DCU module.
     
-    # Create a table for BH devices
-    bh_table = Table(title="BH Devices Supported in dll", show_header=True, header_style="bold magenta")
-    bh_table.add_column("Device", style="cyan")
-    
-    for device in bh_devices:
-        bh_table.add_row(device)
-    
-    console.print(bh_table)
-    console.print()
-    
+    Args:
+        mmc: Micro-Manager instance
+        detailed: If True, show additional details about adapters and DCCHub
+    """
     # Get properties for DCCModule1
     device_name = 'DCCModule1'
     props = mmc.getDevicePropertyNames(device_name)
@@ -57,7 +48,7 @@ def get_DCC_DCU_properties(mmc):
     # Get each property value
     for prop in props:
         try:
-            value = mmc.mmc.getProperty(device_name, prop)
+            value = mmc.getProperty(device_name, prop)
             dcc_table.add_row(prop, str(value))
         except Exception as e:
             dcc_table.add_row(prop, f"Error: {str(e)}")
@@ -65,29 +56,45 @@ def get_DCC_DCU_properties(mmc):
     console.print(dcc_table)
     console.print()
     
-    # Get properties for DCCHub
-    device_name = 'DCCHub'
-    props = mmc.getDevicePropertyNames(device_name)
-    
-    # Create a table for DCCHub properties with values
-    hub_table = Table(
-        title=f"Properties and Values for {device_name}", 
-        show_header=True, 
-        header_style="bold magenta"
-    )
-    hub_table.add_column("Property", style="cyan")
-    hub_table.add_column("Value", style="green")
-    
-    # Get each property value
-    for prop in props:
-        try:
-            value = mmc.mmc.getProperty(device_name, prop)
-            hub_table.add_row(prop, str(value))
-        except Exception as e:
-            hub_table.add_row(prop, f"Error: {str(e)}")
-    
-    console.print(hub_table)
-    console.print()
+    # Only show additional details if requested
+    if detailed:
+        # Get device adapter names with BH
+        device_adapter_names = mmc.getDeviceAdapterNames()
+        bh_devices = [k for k in device_adapter_names if 'BH' in k]
+        
+        # Create a table for BH devices
+        bh_table = Table(title="BH Devices Available", show_header=True, header_style="bold magenta")
+        bh_table.add_column("Device", style="cyan")
+        
+        for device in bh_devices:
+            bh_table.add_row(device)
+        
+        console.print(bh_table)
+        console.print()
+        
+        # Get properties for DCCHub
+        device_name = 'DCCHub'
+        props = mmc.getDevicePropertyNames(device_name)
+        
+        # Create a table for DCCHub properties with values
+        hub_table = Table(
+            title=f"Properties and Values for {device_name}", 
+            show_header=True, 
+            header_style="bold magenta"
+        )
+        hub_table.add_column("Property", style="cyan")
+        hub_table.add_column("Value", style="green")
+        
+        # Get each property value
+        for prop in props:
+            try:
+                value = mmc.getProperty(device_name, prop)
+                hub_table.add_row(prop, str(value))
+            except Exception as e:
+                hub_table.add_row(prop, f"Error: {str(e)}")
+        
+        console.print(hub_table)
+        console.print()
 
 def main():
     parser = argparse.ArgumentParser(
@@ -137,6 +144,12 @@ Examples:
         help='Display device information and properties'
     )
     
+    parser.add_argument(
+        '--detailed', 
+        action='store_true', 
+        help='Show detailed device information including adapters and DCCHub'
+    )
+    
     # Parse arguments
     args = parser.parse_args()
     
@@ -148,14 +161,12 @@ Examples:
         print(f"Error initializing Micro-Manager: {e}")
         print("Falling back to mock Micro-Manager")
         mmc = MockMicroManager()
-        
     
     # Display device information if requested
     if args.info:
         console.print(Panel.fit("Device Information", style="bold blue"))
         get_device_info(mmc)
-        get_DCC_DCU_properties(mmc)
-        
+        get_DCC_DCU_properties(mmc, args.detailed)
         return
     
     # Handle PMT control if requested

@@ -44,6 +44,11 @@ class MicroManagerInterface(ABC):
     def waitForDevice(self, device: str) -> None:
         """Wait for device operation to complete."""
         pass
+        
+    @abstractmethod
+    def getProperty(self, device: str, prop: str) -> str:
+        """Get device property value."""
+        pass
 
 class MockMicroManager(MicroManagerInterface):
     """Mock implementation of Micro-Manager interface for testing."""
@@ -61,6 +66,13 @@ class MockMicroManager(MicroManagerInterface):
                 'UseModule1': 'Yes',
                 'UseModule2': 'No',
                 'UseModule3': 'No'
+            },
+            'DCCModule1': {
+                'EnableOutputs': 'Off',
+                'C3_GainHV': '0',
+                'C3_Plus12V': 'Off',
+                'C4_GainHV': '0',
+                'C4_Plus12V': 'Off'
             }
         }
         self.config_groups = ['ENABLE', 'GAIN CONTROL PERCENT', 'Supply']
@@ -92,6 +104,9 @@ class MockMicroManager(MicroManagerInterface):
 
     def waitForDevice(self, device: str) -> None:
         pass
+        
+    def getProperty(self, device: str, prop: str) -> str:
+        return str(self.device_properties.get(device, {}).get(prop, 'Unknown'))
 
 class MicroManager(MicroManagerInterface):
     """Real implementation of Micro-Manager interface."""
@@ -121,4 +136,7 @@ class MicroManager(MicroManagerInterface):
         self.mmc.setProperty(device, prop, value)
     
     def waitForDevice(self, device: str) -> None:
-        self.mmc.waitForDevice(device) 
+        self.mmc.waitForDevice(device)
+        
+    def getProperty(self, device: str, prop: str) -> str:
+        return self.mmc.getProperty(device, prop) 
