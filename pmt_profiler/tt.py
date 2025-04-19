@@ -3,7 +3,7 @@
 import time
 from typing import List, Optional
 from rich.console import Console
-from tqdm import tqdm
+from rich.progress import Progress
 
 console = Console()
 
@@ -73,20 +73,19 @@ class TimeTaggerManager:
         counter = Counter(self.tagger, channels, binwidth, n_values)
         counter.startFor(capture_duration=binwidth * n_values)
         
-        # Create progress bar
-        pbar = tqdm(total=collection_time_sec, desc="Collecting dark counts", unit="s")
-        last_update = 0
-        
-        while counter.isRunning():
-            time.sleep(0.1)  # Check every 100ms
-            current_time = time.time() - pbar.start_t
-            if current_time - last_update >= 1:  # Update every second
-                pbar.update(1)
-                last_update = current_time
-                
-        pbar.close()
+        # Create progress bar using Rich
+        with Progress() as progress:
+            task = progress.add_task("[cyan]Collecting dark counts...", total=int(collection_time_sec))
+            last_update = 0
+            
+            while counter.isRunning():
+                time.sleep(0.1)  # Check every 100ms
+                current_time = time.time() - progress.start_time
+                if current_time - last_update >= 1:  # Update every second
+                    progress.update(task, advance=1)
+                    last_update = current_time
+                    
         data = counter.getData()
-        
         console.print(f"[green]Dark counts collected for {len(channels)} channels")
         return data
         
