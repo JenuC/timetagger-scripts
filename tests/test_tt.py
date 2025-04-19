@@ -39,14 +39,23 @@ def test_get_darkcounts(mock_timetagger):
     
     # Mock the Counter class
     mock_counter = MagicMock()
-    mock_counter.isRunning.return_value = False
+    mock_counter.isRunning.side_effect = [True, True, False]  # Run twice, then stop
     mock_counter.getData.return_value = [100.0, 200.0]
     
-    with patch('TimeTagger.Counter', return_value=mock_counter):
+    # Mock tqdm to prevent actual progress bar display during tests
+    with patch('TimeTagger.Counter', return_value=mock_counter), \
+         patch('pmt_profiler.tt.tqdm') as mock_tqdm:
+        # Configure mock tqdm instance
+        mock_progress = MagicMock()
+        mock_progress.start_t = 0
+        mock_tqdm.return_value = mock_progress
+        
         data = tt.get_darkcounts([-1, 1], collection_time_sec=1, timing_resolution_sec=1)
         
         assert data == [100.0, 200.0]
         mock_counter.startFor.assert_called_once()
+        mock_tqdm.assert_called_once()
+        mock_progress.close.assert_called_once()
 
 def test_close(mock_timetagger):
     """Test closing TimeTagger resources."""

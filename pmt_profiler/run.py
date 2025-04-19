@@ -4,6 +4,8 @@ from pmt_profiler.core import MicroManager
 import os
 import pandas as pd
 from datetime import datetime
+from tqdm import tqdm
+import time
 
 # Create data directory if it doesn't exist
 data_dir = 'data'
@@ -23,7 +25,8 @@ collection_time_sec=5
 timing_resolution_sec=1
 
 start_PMT(mmc=mm2.mmc, gain=65)
-# Get dark counts
+# Get dark counts with progress bar
+print(f"\nCollecting dark counts for {collection_time_sec} seconds...")
 data = tt.get_darkcounts(channels,collection_time_sec,timing_resolution_sec)
 
 import numpy as np
