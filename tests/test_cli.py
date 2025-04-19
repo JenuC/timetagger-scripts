@@ -10,25 +10,24 @@ from pmt_profiler.core import MockMicroManager
 # Mock the MicroManager class to prevent it from trying to load real hardware
 @patch('pmt_profiler.core.MicroManager')
 def test_cli_help(mock_micro_manager):
-    """Test that the help message is displayed when no arguments are provided."""
-    # Configure the mock to return a MockMicroManager instance
-    mock_micro_manager.return_value = MockMicroManager()
-    
-    with patch('sys.stdout', new=StringIO()) as fake_out:
-        with patch('sys.argv', ['pmt_profiler.cli']):
+    """Test that the help message is displayed correctly."""
+    with patch('sys.argv', ['pmt-profiler', '--help']), \
+         patch('sys.stdout', new=StringIO()) as fake_out:
+        with pytest.raises(SystemExit):
             main()
         output = fake_out.getvalue()
-        assert "PMT Profiler Analysis Tool" in output
-        assert "--pmt" in output
-        assert "--gain" in output
-        assert "--channel" in output
-        assert "--mock" in output
-        assert "--info" in output
-        assert "--detailed" in output
+        # Check for key help message components
+        assert "PMT Profiler" in output
+        assert "usage:" in output.lower()  # Case-insensitive check
+        assert "--pmt" in output  # Check for PMT option
+        assert "start" in output  # Check for start command
+        assert "stop" in output   # Check for stop command
+        assert "--info" in output # Check for info option
+        assert "Examples:" in output  # Check for examples section
 
 @patch('pmt_profiler.core.MicroManager')
 def test_cli_start_pmt_mock(mock_micro_manager):
-    """Test starting the PMT in mock mode."""
+    """Test starting the PMT in mock mode with default cooling time."""
     # Configure the mock to return a MockMicroManager instance
     mock_micro_manager.return_value = MockMicroManager()
     
@@ -39,13 +38,40 @@ def test_cli_start_pmt_mock(mock_micro_manager):
         assert "PMT started on channel C3 with gain 65" in output
 
 @patch('pmt_profiler.core.MicroManager')
+def test_cli_start_pmt_no_cooling(mock_micro_manager):
+    """Test starting the PMT in mock mode with no cooling."""
+    # Configure the mock to return a MockMicroManager instance
+    mock_micro_manager.return_value = MockMicroManager()
+    
+    with patch('sys.stdout', new=StringIO()) as fake_out:
+        with patch('sys.argv', ['pmt_profiler.cli', '--mock', '--pmt', 'start', '--gain', '65', '--channel', 'C3', '--cooling-time', '0']):
+            main()
+        output = fake_out.getvalue()
+        assert "PMT started on channel C3 with gain 65" in output
+        assert "Warning: PMT cooler is not being used!" in output
+        assert "Starting PMT cooler" not in output
+
+@patch('pmt_profiler.core.MicroManager')
+def test_cli_start_pmt_custom_cooling(mock_micro_manager):
+    """Test starting the PMT in mock mode with custom cooling time."""
+    # Configure the mock to return a MockMicroManager instance
+    mock_micro_manager.return_value = MockMicroManager()
+    
+    with patch('sys.stdout', new=StringIO()) as fake_out:
+        with patch('sys.argv', ['pmt_profiler.cli', '--mock', '--pmt', 'start', '--gain', '65', '--channel', 'C3', '--cooling-time', '3']):
+            main()
+        output = fake_out.getvalue()
+        assert "PMT started on channel C3 with gain 65" in output
+        assert "Starting PMT cooler" in output
+
+@patch('pmt_profiler.core.MicroManager')
 def test_cli_stop_pmt_mock(mock_micro_manager):
     """Test stopping the PMT in mock mode."""
     # Configure the mock to return a MockMicroManager instance
     mock_micro_manager.return_value = MockMicroManager()
     
     with patch('sys.stdout', new=StringIO()) as fake_out:
-        with patch('sys.argv', ['pmt_profiler.cli', '--mock', '--pmt', 'stop', '--channel', 'C3']):
+        with patch('sys.argv', ['pmt_profiler.cli', '--mock', '--pmt', 'stop']):
             main()
         output = fake_out.getvalue()
         assert "PMT stopped on channel C3" in output

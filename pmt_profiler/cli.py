@@ -98,7 +98,7 @@ def get_DCC_DCU_properties(mmc, detailed=False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="PMT Profiler Analysis Tool",
+        description="PMT Profiler Tool using BH-DCC and Swabian-TTU",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -139,6 +139,13 @@ Examples:
     )
     
     parser.add_argument(
+        '--cooling-time', 
+        type=float, 
+        default=5.0, 
+        help='Cooling time in seconds before starting PMT. Set to 0 to skip cooling (default: 5.0)'
+    )
+    
+    parser.add_argument(
         '--info', 
         action='store_true', 
         help='Display device information and properties'
@@ -171,7 +178,7 @@ Examples:
     
     # Handle PMT control if requested
     if args.pmt == 'start':
-        start_PMT(mmc, args.gain, args.channel)
+        start_PMT(mmc, args.gain, args.channel, args.cooling_time)
     elif args.pmt == 'stop':
         stop_PMT(mmc, 0, args.channel)
     else:
