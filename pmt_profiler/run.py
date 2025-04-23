@@ -24,10 +24,10 @@ mm2 = MicroManager()
 tt.set_trigger_level(-1, -0.01)  # For start channel
 
 channels=[-1, 1]
-collection_time_sec=10
+collection_time_sec=60
 timing_resolution_sec=1
 
-for cooling_time in [0,10]:
+for cooling_time in [0,30]:
     start_PMT(mmc=mm2.mmc, gain=65,cooling_time=cooling_time)
 
     # Get dark counts with progress bar
