@@ -21,42 +21,34 @@ if not os.path.exists(data_dir):
 tt = TimeTaggerManager()
 mm2 = MicroManager()
 # Set trigger levels
-tt.set_trigger_level(-1, -0.01)  # For start channel
-
-channels=[-1, 1]
+tt_channels=[-1, 1]
+tt.set_trigger_level(tt_channels[0], -0.01)  # For start channel 10mV 
+    # we can trigger PMT wihtout fast-preamp at 1mV
+    # swabian spec say min detction is 100mV
 collection_time_sec=60
 timing_resolution_sec=1
 
-for cooling_time in [0,30]:
-    start_PMT(mmc=mm2.mmc, gain=65,cooling_time=cooling_time)
+pmt_channel = 'C1'
 
+for cooling_time in [0,30]:
+    start_PMT(mmc=mm2.mmc, gain=65,cooling_time=cooling_time,channel=pmt_channel)
     # Get dark counts with progress bar
     print(f"\nCollecting dark counts for {collection_time_sec} seconds...")
-    data = tt.get_darkcounts(channels,collection_time_sec,timing_resolution_sec)
-
+    data = tt.get_darkcounts(tt_channels,collection_time_sec,timing_resolution_sec)
+    stop_PMT(mmc = mm2.mmc,channel=pmt_channel)
 
     time_points = np.arange(0, collection_time_sec, timing_resolution_sec)
-
-
     style.use('ggplot')        
     plt.figure(figsize=(10, 6))
-
-    # Plot each channel
-    for i, channel in enumerate(channels):
+    for i, tt_channel in enumerate(tt_channels):
         plt.plot(
             time_points,
             data[i],
             marker='o',
             linestyle='-',
-            label=f'Channel {channel}',
+            label=f'Channel {tt_channel}',
             alpha=0.7
         )
-
-    stop_PMT(mmc = mm2.mmc)
-    # Clean up when done
-    
-
-    # Customize plot
     plt.title('Dark Counts Over Time', pad=20)
     plt.xlabel('Time (s)')
     plt.ylabel('Count Rate (Hz)')
@@ -72,13 +64,10 @@ for cooling_time in [0,30]:
     plt.savefig(plot_filename)
 
     # Save the data as CSV
-    # Create a DataFrame with time points and count data
     df = pd.DataFrame({
         'Time (s)': time_points,
-        **{f'Channel {ch} Count Rate (Hz)': data[i] for i, ch in enumerate(channels)}
+        **{f'Channel {ch} Count Rate (Hz)': data[i] for i, ch in enumerate(tt_channels)}
     })
-
-    # Save to CSV
     csv_filename = os.path.join('data', f'dark_counts_{timestamp}_ctime_{cooling_time}.csv')
     df.to_csv(csv_filename, index=False)
     print(f"Data saved to {csv_filename}")

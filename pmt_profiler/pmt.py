@@ -6,6 +6,15 @@ from rich.progress import Progress
 from .core import MicroManager, MockMicroManager
 
 console = Console()
+DCC100 =True
+
+def ensure_cooling_channel_for_DCC(channel):
+    if channel != 'C3':
+        console.print("DCC can only set Cooling on C3_cooling as a property")
+        console.print("[red] Setting to C3_cooling")
+        return 'C3'
+    else:
+        return channel
 
 def start_cooler(mmc: MicroManager, channel: str = 'C3', cooling_time: float = 5.0) -> None:
     """Start PMT cooler with a timer.
@@ -18,6 +27,9 @@ def start_cooler(mmc: MicroManager, channel: str = 'C3', cooling_time: float = 5
     with Progress() as progress:
         task = progress.add_task("[cyan]Starting PMT cooler...", total=int(cooling_time))
         
+        if DCC100:
+            channel = ensure_cooling_channel_for_DCC(channel)
+
         # Set cooler parameters
         mmc.setProperty('DCCModule1', f'{channel}_CoolerVoltage', 2.6)
         mmc.setProperty('DCCModule1', f'{channel}_Cooling', 'On')
@@ -70,6 +82,8 @@ def stop_PMT(mmc: MicroManager, gain: int = 0, channel: str = 'C3') -> None:
     # Disable +12V for the channel
     mmc.setProperty('DCCModule1', channel+'_Plus12V', 'Off')
     # Turn off cooling
+    if DCC100:
+        channel = ensure_cooling_channel_for_DCC(channel)
     mmc.setProperty('DCCModule1', f'{channel}_Cooling', 'Off')
     # Wait for device to complete operations
     mmc.waitForDevice('DCCModule1')
