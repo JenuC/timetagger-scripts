@@ -28,6 +28,7 @@ dependencies = [
     "tqdm",
     "openpyxl",
     "pytest",
+    "tm_devices"
 ]
 
 [project.scripts]
