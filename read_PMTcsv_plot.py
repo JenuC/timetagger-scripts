@@ -37,7 +37,6 @@ for file in files:
 
     # Find 50% point for jitter analysis
     fifty_percent = (norm_amplitude.min())/2
-    print(fifty_percent)
     fifty_percent_index = np.where(np.diff(np.sign(norm_amplitude - fifty_percent)))[0]
     if len(fifty_percent_index) > 0:
             crossing_idx = fifty_percent_index[0]
@@ -78,8 +77,4 @@ ax2.grid()
 
 plt.tight_layout()
 plt.show()
-
-
-
-
 
