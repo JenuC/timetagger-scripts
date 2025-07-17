@@ -9,3 +9,4 @@ tqdm
 openpyxl
 rich
 pytest
+tm_devices
